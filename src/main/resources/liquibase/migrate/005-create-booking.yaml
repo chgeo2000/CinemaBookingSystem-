@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 5
+      author: georgechira
+      comment: "add booking table"
+      changes:
+        - createTable:
+            tableName: booking
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_booking_user
+                    referencedTableName: cinema_user
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: showing_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_booking_showing
+                    referencedTableName: showing
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: booking_time
+                  type: timestamp
+              - column:
+                  name: status
+                  type: varchar(25)

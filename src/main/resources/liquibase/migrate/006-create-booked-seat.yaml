@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 6
+      author: georgechira
+      comment: "add booked_seat table with uniqueness on (showing_id, seat_id) to enforce single-occupancy at the schema level"
+      changes:
+        - createTable:
+            tableName: booked_seat
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: booking_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_booked_seat_booking
+                    referencedTableName: booking
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: showing_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_booked_seat_showing
+                    referencedTableName: showing
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: seat_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_booked_seat_seat
+                    referencedTableName: seat
+                    referencedColumnNames: id
+                    deleteCascade: true
+        - addUniqueConstraint:
+            tableName: booked_seat
+            columnNames: showing_id, seat_id
+            constraintName: uk_booked_seat_showing_seat

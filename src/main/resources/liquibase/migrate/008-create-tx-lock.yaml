@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 8
+      author: georgechira
+      comment: "add tx_lock table — one row per (transaction, resource) lock; multiple rows share resource for SHARED locks"
+      changes:
+        - createTable:
+            tableName: tx_lock
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: transaction_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tx_lock_transaction
+                    referencedTableName: tx_transaction
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: table_name
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resource_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lock_type
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: acquired_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - createIndex:
+            tableName: tx_lock
+            indexName: idx_tx_lock_resource
+            columns:
+              - column:
+                  name: table_name
+              - column:
+                  name: resource_id
+        - createIndex:
+            tableName: tx_lock
+            indexName: idx_tx_lock_transaction
+            columns:
+              - column:
+                  name: transaction_id

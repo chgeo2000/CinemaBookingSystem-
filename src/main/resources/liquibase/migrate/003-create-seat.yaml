@@ -1,0 +1,24 @@
+databaseChangeLog:
+  - changeSet:
+      id: 3
+      author: georgechira
+      comment: "add seat table"
+      changes:
+        - createTable:
+            tableName: seat
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: row_number
+                  type: varchar(5)
+              - column:
+                  name: column_number
+                  type: varchar(5)
+              - column:
+                  name: seat_type
+                  type: varchar(30)

@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - include:
+      file: liquibase/migrate/001-create-movie.yaml
+  - include:
+      file: liquibase/migrate/002-create-cinema-user.yaml
+  - include:
+      file: liquibase/migrate/003-create-seat.yaml
+  - include:
+      file: liquibase/migrate/004-create-showing.yaml
+  - include:
+      file: liquibase/migrate/005-create-booking.yaml
+  - include:
+      file: liquibase/migrate/006-create-booked-seat.yaml
+  - include:
+      file: liquibase/migrate/007-create-tx-transaction.yaml
+  - include:
+      file: liquibase/migrate/008-create-tx-lock.yaml
+  - include:
+      file: liquibase/migrate/009-create-tx-operation.yaml

@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: 4
+      author: georgechira
+      comment: "add showing table"
+      changes:
+        - createTable:
+            tableName: showing
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: movie_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_showing_movie
+                    referencedTableName: movie
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: screening_date
+                  type: date

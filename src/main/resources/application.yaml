@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: CinemaBookingSystem
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  sql:
+    init:
+      mode: never
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      pool-name: CinemaBookingHikariPool
+  liquibase:
+    enabled: true
+    change-log: classpath:liquibase/database-changelog.yaml
+
+server:
+  port: ${SERVER_PORT:8080}
+
+security:
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration-millis: ${JWT_EXPIRATION_MS:86400000}
+    issuer: cinema-booking-system
+
+logging:
+  level:
+    org.example.cinemabookingsystem: INFO
+    org.springframework.jdbc.core.JdbcTemplate: WARN
+    liquibase: INFO

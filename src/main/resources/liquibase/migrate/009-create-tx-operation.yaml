@@ -1,0 +1,63 @@
+databaseChangeLog:
+  - changeSet:
+      id: 9
+      author: georgechira
+      comment: "add tx_operation table — append-only operation log used by RollbackManager to replay compensations in reverse order"
+      changes:
+        - createTable:
+            tableName: tx_operation
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: transaction_id
+                  type: varchar(36)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_tx_operation_transaction
+                    referencedTableName: tx_transaction
+                    referencedColumnNames: id
+                    deleteCascade: true
+              - column:
+                  name: sequence_number
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: operation_type
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: table_name
+                  type: varchar(32)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: resource_id
+                  type: bigint
+              - column:
+                  name: compensation_sql
+                  type: text
+              - column:
+                  name: compensation_params_json
+                  type: text
+              - column:
+                  name: executed_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: tx_operation
+            columnNames: transaction_id, sequence_number
+            constraintName: uk_tx_operation_tx_seq
+        - createIndex:
+            tableName: tx_operation
+            indexName: idx_tx_operation_transaction
+            columns:
+              - column:
+                  name: transaction_id

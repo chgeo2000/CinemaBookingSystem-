@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 7
+      author: georgechira
+      comment: "add tx_transaction table — durable record of every transaction managed by the custom 2PL engine"
+      changes:
+        - createTable:
+            tableName: tx_transaction
+            columns:
+              - column:
+                  name: id
+                  type: varchar(36)
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: status
+                  type: varchar(16)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: started_at
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ended_at
+                  type: timestamp
+        - createIndex:
+            tableName: tx_transaction
+            indexName: idx_tx_transaction_status
+            columns:
+              - column:
+                  name: status

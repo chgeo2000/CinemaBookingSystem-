@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:17.2
+    container_name: cinema-booking-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cinema_booking
+      POSTGRES_USER: cinema
+      POSTGRES_PASSWORD: cinema
+    ports:
+      - "5432:5432"
+    volumes:
+      - cinema_booking_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cinema -d cinema_booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cinema_booking_pgdata:
+    name: cinema_booking_pgdata
