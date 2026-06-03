@@ -1,4 +1,6 @@
 spring:
+  liquibase:
+    contexts: local
   datasource:
     url: jdbc:postgresql://localhost:5432/cinema_booking
     username: cinema

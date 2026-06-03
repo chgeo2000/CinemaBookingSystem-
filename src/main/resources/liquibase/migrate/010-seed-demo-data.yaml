@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 10
+      author: georgechira
+      context: local
+      comment: "seed local-only demo data: admin + 3 users + 1 movie + 1 showing + 12 seats. BCrypt hashes precomputed for password 'password123'."
+      changes:
+        - insert:
+            tableName: cinema_user
+            columns:
+              - column: { name: user_name,    value: "admin" }
+              - column: { name: password,     value: "$2a$10$wOpQXMFqq2x76oQNHrlS3.aRy/AlW0E6QgIgRWFAlmJBmnVQS9bMy" }
+              - column: { name: role,         value: "ADMIN" }
+              - column: { name: email,        value: "admin@example.com" }
+              - column: { name: phone_number, value: "0700000000" }
+        - insert:
+            tableName: cinema_user
+            columns:
+              - column: { name: user_name,    value: "alice" }
+              - column: { name: password,     value: "$2a$10$wOpQXMFqq2x76oQNHrlS3.aRy/AlW0E6QgIgRWFAlmJBmnVQS9bMy" }
+              - column: { name: role,         value: "USER" }
+              - column: { name: email,        value: "alice@example.com" }
+              - column: { name: phone_number, value: "0700000001" }
+        - insert:
+            tableName: cinema_user
+            columns:
+              - column: { name: user_name,    value: "bob" }
+              - column: { name: password,     value: "$2a$10$wOpQXMFqq2x76oQNHrlS3.aRy/AlW0E6QgIgRWFAlmJBmnVQS9bMy" }
+              - column: { name: role,         value: "USER" }
+              - column: { name: email,        value: "bob@example.com" }
+              - column: { name: phone_number, value: "0700000002" }
+        - insert:
+            tableName: cinema_user
+            columns:
+              - column: { name: user_name,    value: "carol" }
+              - column: { name: password,     value: "$2a$10$wOpQXMFqq2x76oQNHrlS3.aRy/AlW0E6QgIgRWFAlmJBmnVQS9bMy" }
+              - column: { name: role,         value: "USER" }
+              - column: { name: email,        value: "carol@example.com" }
+              - column: { name: phone_number, value: "0700000003" }
+
+        - insert:
+            tableName: movie
+            columns:
+              - column: { name: title,        value: "Demo Movie" }
+              - column: { name: description,  value: "A film used to demonstrate the 2PL engine." }
+              - column: { name: genre,        value: "Drama" }
+              - column: { name: director,     value: "G. Chira" }
+              - column: { name: language,     value: "English" }
+              - column: { name: duration,     valueNumeric: 120 }
+              - column: { name: release_date, valueDate: "2026-06-01" }
+              - column: { name: rating,       value: "PG-13" }
+              - column: { name: trailer_url,  value: "https://example.com/trailer" }
+
+        - insert:
+            tableName: showing
+            columns:
+              - column: { name: movie_id,        valueComputed: "(SELECT id FROM movie WHERE title = 'Demo Movie')" }
+              - column: { name: screening_date,  valueDate: "2026-06-15" }
+
+        - sql:
+            comment: "seed 12 seats (rows A-C, columns 1-4)"
+            sql: |
+              INSERT INTO seat (row_number, column_number, seat_type) VALUES
+                ('A','1','REGULAR'), ('A','2','REGULAR'), ('A','3','REGULAR'), ('A','4','REGULAR'),
+                ('B','1','REGULAR'), ('B','2','REGULAR'), ('B','3','REGULAR'), ('B','4','REGULAR'),
+                ('C','1','VIP'),     ('C','2','VIP'),     ('C','3','VIP'),     ('C','4','VIP');

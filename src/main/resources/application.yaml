@@ -18,6 +18,8 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:liquibase/database-changelog.yaml
+    # default profile excludes any context tagged "local" — seed data must not reach prod
+    contexts: "!local"
 
 server:
   port: ${SERVER_PORT:8080}

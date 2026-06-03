@@ -17,3 +17,5 @@ databaseChangeLog:
       file: liquibase/migrate/008-create-tx-lock.yaml
   - include:
       file: liquibase/migrate/009-create-tx-operation.yaml
+  - include:
+      file: liquibase/migrate/010-seed-demo-data.yaml

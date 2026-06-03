@@ -45,7 +45,7 @@ databaseChangeLog:
                   type: text
               - column:
                   name: compensation_params_json
-                  type: text
+                  type: jsonb
               - column:
                   name: executed_at
                   type: timestamp
