@@ -40,7 +40,7 @@ public class SeatRepository {
         jdbcClient.sql(INSERT_SQL)
                 .param("rowNumber", seat.rowNumber())
                 .param("columnNumber", seat.columnNumber())
-                .param("seatType", seat.seatType())
+                .param("seatType", seat.seatType().name())
                 .update(keyHolder);
         return new Seat(extractGeneratedId(keyHolder), seat.rowNumber(), seat.columnNumber(), seat.seatType());
     }

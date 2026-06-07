@@ -1,6 +1,7 @@
 package org.example.cinemabookingsystem.seat.rowmappers;
 
 import org.example.cinemabookingsystem.seat.Seat;
+import org.example.cinemabookingsystem.seat.SeatType;
 import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
@@ -14,7 +15,7 @@ public class SeatRowMapper implements RowMapper<Seat> {
                 rs.getLong("id"),
                 rs.getString("row_number"),
                 rs.getString("column_number"),
-                rs.getString("seat_type")
+                SeatType.valueOf(rs.getString("seat_type"))
         );
     }
 }
