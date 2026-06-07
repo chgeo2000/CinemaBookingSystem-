@@ -1,16 +1,17 @@
 package org.example.cinemabookingsystem.booking;
 
 import lombok.RequiredArgsConstructor;
+import org.example.cinemabookingsystem.concurrency.api.Compensation;
 import org.example.cinemabookingsystem.concurrency.api.TransactionContext;
 import org.example.cinemabookingsystem.concurrency.api.TransactionManager;
 import org.example.cinemabookingsystem.showing.Showing;
 import org.example.cinemabookingsystem.showing.ShowingRepository;
 import org.example.cinemabookingsystem.showing.ShowingNotFoundException;
-import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.example.cinemabookingsystem.booking.SeatLockKey.encode;
@@ -46,7 +47,7 @@ public class BookingService {
             """;
 
     private static final String SEAT_TAKEN_CHECK_SQL =
-            "SELECT id FROM booked_seat WHERE showing_id = ? AND seat_id = ?";
+            "SELECT EXISTS(SELECT 1 FROM booked_seat WHERE showing_id = ? AND seat_id = ?)";
 
     private static final String DELETE_BOOKING_SQL = "DELETE FROM booking WHERE id = ?";
     private static final String COMPENSATE_DELETE_BOOKING_SQL = """
@@ -64,7 +65,6 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final BookedSeatRepository bookedSeatRepository;
     private final ShowingRepository showingRepository;
-    private final JdbcClient jdbcClient;
 
     /**
      * Public booking entry point. Sorts seat IDs in ascending order to give every concurrent
@@ -118,30 +118,28 @@ public class BookingService {
 
             // Sort by composite lock key so concurrent cancels never deadlock.
             List<BookedSeat> sorted = bookedSeats.stream()
-                    .sorted((a, b) -> Long.compare(
-                            encode(a.showingId(), a.seatId()),
-                            encode(b.showingId(), b.seatId())))
+                    .sorted(Comparator.comparingLong(bs -> encode(bs.showingId(), bs.seatId())))
                     .toList();
 
             for (BookedSeat bs : sorted) {
                 ctx.lockExclusive(BOOKED_SEAT, encode(bs.showingId(), bs.seatId()));
                 ctx.delete(
                         BOOKED_SEAT, bs.id(),
-                        DELETE_BOOKED_SEAT_SQL, new Object[]{bs.id()},
-                        COMPENSATE_DELETE_BOOKED_SEAT_SQL,
-                        new Object[]{bs.id(), bs.bookingId(), bs.showingId(), bs.seatId()}
+                        DELETE_BOOKED_SEAT_SQL,
+                        Compensation.of(COMPENSATE_DELETE_BOOKED_SEAT_SQL,
+                                bs.id(), bs.bookingId(), bs.showingId(), bs.seatId()),
+                        bs.id()
                 );
             }
 
             ctx.delete(
                     BOOKING, bookingId,
-                    DELETE_BOOKING_SQL, new Object[]{bookingId},
-                    COMPENSATE_DELETE_BOOKING_SQL,
-                    new Object[]{
+                    DELETE_BOOKING_SQL,
+                    Compensation.of(COMPENSATE_DELETE_BOOKING_SQL,
                             booking.id(), booking.userId(), booking.showingId(),
                             booking.bookingTime() == null ? null : Timestamp.from(booking.bookingTime()),
-                            booking.status().name()
-                    }
+                            booking.status().name()),
+                    bookingId
             );
         });
     }
@@ -155,12 +153,7 @@ public class BookingService {
     }
 
     private boolean isSeatAlreadyBooked(TransactionContext ctx, Long showingId, Long seatId) {
-        return ctx.queryOptional(
-                BOOKED_SEAT, encode(showingId, seatId),
-                SEAT_TAKEN_CHECK_SQL,
-                (rs, rowNum) -> rs.getLong("id"),
-                showingId, seatId
-        ).isPresent();
+        return ctx.exists(BOOKED_SEAT, encode(showingId, seatId), SEAT_TAKEN_CHECK_SQL, showingId, seatId);
     }
 
     private long insertBooking(TransactionContext ctx, Long userId, Long showingId) {

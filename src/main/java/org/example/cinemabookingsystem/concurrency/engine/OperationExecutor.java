@@ -2,18 +2,16 @@ package org.example.cinemabookingsystem.concurrency.engine;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import org.example.cinemabookingsystem.concurrency.api.Compensation;
 import org.example.cinemabookingsystem.concurrency.model.enums.LockedTable;
 import org.example.cinemabookingsystem.concurrency.model.enums.OperationType;
 import org.example.cinemabookingsystem.concurrency.repository.OperationRepository;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.example.cinemabookingsystem.utils.JsonParser.toJsonArray;
 
@@ -56,12 +54,11 @@ public class OperationExecutor {
                       LockedTable table,
                       Long resourceId,
                       String sql,
-                      Object[] params,
-                      String compensationSql,
-                      Object[] compensationParams) {
+                      Compensation compensation,
+                      Object[] params) {
         int rows = jdbcClient.sql(sql).params(params).update();
         operationRepository.append(transactionId, sequenceNumber, OperationType.UPDATE, table,
-                resourceId, compensationSql, toJsonArray(compensationParams));
+                resourceId, compensation.sql(), toJsonArray(compensation.params().toArray()));
         return rows;
     }
 
@@ -70,37 +67,24 @@ public class OperationExecutor {
                       LockedTable table,
                       Long resourceId,
                       String sql,
-                      Object[] params,
-                      String compensationSql,
-                      Object[] compensationParams) {
+                      Compensation compensation,
+                      Object[] params) {
         int rows = jdbcClient.sql(sql).params(params).update();
         operationRepository.append(transactionId, sequenceNumber, OperationType.DELETE, table,
-                resourceId, compensationSql, toJsonArray(compensationParams));
+                resourceId, compensation.sql(), toJsonArray(compensation.params().toArray()));
         return rows;
     }
 
-    public <T> Optional<T> queryOptional(String transactionId,
-                                         int sequenceNumber,
-                                         LockedTable table,
-                                         Long resourceId,
-                                         String sql,
-                                         RowMapper<T> rowMapper,
-                                         Object[] params) {
-        Optional<T> result = jdbcClient.sql(sql).params(params).query(rowMapper).optional();
+    public boolean exists(String transactionId,
+                          int sequenceNumber,
+                          LockedTable table,
+                          Long resourceId,
+                          String sql,
+                          Object[] params) {
+        boolean present = Boolean.TRUE.equals(
+                jdbcClient.sql(sql).params(params).query(Boolean.class).single());
         logSelect(transactionId, sequenceNumber, table, resourceId);
-        return result;
-    }
-
-    public <T> List<T> queryList(String transactionId,
-                                 int sequenceNumber,
-                                 LockedTable table,
-                                 Long resourceId,
-                                 String sql,
-                                 RowMapper<T> rowMapper,
-                                 Object[] params) {
-        List<T> result = jdbcClient.sql(sql).params(params).query(rowMapper).list();
-        logSelect(transactionId, sequenceNumber, table, resourceId);
-        return result;
+        return present;
     }
 
     private void logSelect(String transactionId, int sequenceNumber, LockedTable table, Long resourceId) {

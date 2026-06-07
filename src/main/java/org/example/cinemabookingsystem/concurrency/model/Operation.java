@@ -1,6 +1,7 @@
 package org.example.cinemabookingsystem.concurrency.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.commons.lang3.StringUtils;
 import org.example.cinemabookingsystem.concurrency.model.enums.LockedTable;
 import org.example.cinemabookingsystem.concurrency.model.enums.OperationType;
 
@@ -18,6 +19,6 @@ public record Operation(
         Instant executedAt
 ) {
     public boolean hasCompensation() {
-        return compensationSql != null && !compensationSql.isBlank();
+        return StringUtils.isNotBlank(compensationSql);
     }
 }

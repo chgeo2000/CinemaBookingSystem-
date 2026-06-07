@@ -1,13 +1,10 @@
 package org.example.cinemabookingsystem.concurrency.engine;
 
 import lombok.RequiredArgsConstructor;
+import org.example.cinemabookingsystem.concurrency.api.Compensation;
 import org.example.cinemabookingsystem.concurrency.api.TransactionContext;
 import org.example.cinemabookingsystem.concurrency.model.enums.LockType;
 import org.example.cinemabookingsystem.concurrency.model.enums.LockedTable;
-import org.springframework.jdbc.core.RowMapper;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Single-use context bound to one transaction running on one thread. Combines lock acquisition
@@ -47,42 +44,25 @@ final class TransactionContextImpl implements TransactionContext {
     public int update(LockedTable table,
                       long resourceId,
                       String sql,
-                      Object[] params,
-                      String compensationSql,
-                      Object[] compensationParams) {
+                      Compensation compensation,
+                      Object... params) {
         return operationExecutor.update(transactionId, nextSeq(), table, resourceId,
-                sql, params, compensationSql, compensationParams);
+                sql, compensation, params);
     }
 
     @Override
     public int delete(LockedTable table,
                       long resourceId,
                       String sql,
-                      Object[] params,
-                      String compensationSql,
-                      Object[] compensationParams) {
+                      Compensation compensation,
+                      Object... params) {
         return operationExecutor.delete(transactionId, nextSeq(), table, resourceId,
-                sql, params, compensationSql, compensationParams);
+                sql, compensation, params);
     }
 
     @Override
-    public <T> Optional<T> queryOptional(LockedTable table,
-                                         long resourceId,
-                                         String sql,
-                                         RowMapper<T> rowMapper,
-                                         Object... params) {
-        return operationExecutor.queryOptional(transactionId, nextSeq(), table, resourceId,
-                sql, rowMapper, params);
-    }
-
-    @Override
-    public <T> List<T> queryList(LockedTable table,
-                                 long resourceId,
-                                 String sql,
-                                 RowMapper<T> rowMapper,
-                                 Object... params) {
-        return operationExecutor.queryList(transactionId, nextSeq(), table, resourceId,
-                sql, rowMapper, params);
+    public boolean exists(LockedTable table, long resourceId, String sql, Object... params) {
+        return operationExecutor.exists(transactionId, nextSeq(), table, resourceId, sql, params);
     }
 
     private int nextSeq() {

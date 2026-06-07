@@ -3,8 +3,8 @@ package org.example.cinemabookingsystem.seat;
 import lombok.RequiredArgsConstructor;
 import org.example.cinemabookingsystem.seat.dto.CreateSeatRequest;
 import org.example.cinemabookingsystem.seat.dto.SeatAvailability;
+import org.example.cinemabookingsystem.seat.rowmappers.SeatAvailabilityRowMapper;
 import org.example.cinemabookingsystem.showing.ShowingService;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 
@@ -42,17 +42,7 @@ public class SeatService {
         showingService.findById(showingId);
         return jdbcClient.sql(SEAT_AVAILABILITY_SQL)
                 .param("showingId", showingId)
-                .query(seatAvailabilityRowMapper())
+                .query(new SeatAvailabilityRowMapper())
                 .list();
-    }
-
-    private RowMapper<SeatAvailability> seatAvailabilityRowMapper() {
-        return (rs, rowNum) -> new SeatAvailability(
-                rs.getLong("seat_id"),
-                rs.getString("row_number"),
-                rs.getString("column_number"),
-                rs.getString("seat_type"),
-                rs.getBoolean("booked")
-        );
     }
 }

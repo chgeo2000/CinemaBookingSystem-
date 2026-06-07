@@ -100,8 +100,8 @@ public class LockManager {
                 if (!lock.isHeldBy(transactionId)) {
                     continue;
                 }
-                Lock without = lock.withoutHolder(transactionId);
-                if (without.transactionHasLockIds().isEmpty()) {
+                Lock without = lock.removeHolder(transactionId);
+                if (without.transactionsHoldingLockIds().isEmpty()) {
                     toRemove.add(entry.getKey());
                 } else {
                     toUpdate.add(Map.entry(entry.getKey(), without));
@@ -124,12 +124,12 @@ public class LockManager {
     }
 
     private void grantNew(String transactionId, LockedTable table, long resourceId, LockType type, ResourceKey key) {
-        heldLocks.put(key, Lock.newHeldBy(type, table, resourceId, transactionId));
+        heldLocks.put(key, Lock.grantedTo(type, table, resourceId, transactionId));
         lockRepository.recordAcquired(transactionId, table, resourceId, type);
     }
 
     private void upgradeToExclusive(String transactionId, LockedTable table, long resourceId, ResourceKey key) {
-        heldLocks.put(key, Lock.newHeldBy(LockType.EXCLUSIVE, table, resourceId, transactionId));
+        heldLocks.put(key, Lock.grantedTo(LockType.EXCLUSIVE, table, resourceId, transactionId));
         lockRepository.recordAcquired(transactionId, table, resourceId, LockType.EXCLUSIVE);
     }
 
@@ -139,12 +139,12 @@ public class LockManager {
                                  LockType requestedType,
                                  ResourceKey key,
                                  Lock existing) {
-        heldLocks.put(key, existing.withAdditionalHolder(transactionId));
+        heldLocks.put(key, existing.addHolder(transactionId));
         lockRepository.recordAcquired(transactionId, table, resourceId, requestedType);
     }
 
     private void registerWaitEdges(String transactionId, Lock existing) {
-        for (String holder : existing.transactionHasLockIds()) {
+        for (String holder : existing.transactionsHoldingLockIds()) {
             if (!holder.equals(transactionId)) {
                 waitForGraph.addEdge(transactionId, holder);
             }

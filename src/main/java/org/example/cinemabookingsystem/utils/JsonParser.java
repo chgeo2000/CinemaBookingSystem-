@@ -2,24 +2,35 @@ package org.example.cinemabookingsystem.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.apache.commons.lang3.StringUtils;
 
 public final class JsonParser {
 
-    private static final ObjectMapper jsonMapper = JsonMapper.builder().build();
+    private static final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     private JsonParser() {
         throw new IllegalStateException("Utility class");
     }
 
     public static JsonNode parseJson(String input) {
-        if (input == null || input.isBlank()) {
+        if (StringUtils.isBlank(input)) {
             return jsonMapper.createObjectNode();
         }
         try {
             return jsonMapper.readTree(input);
+        } catch (JsonProcessingException e) {
+            throw new JsonParsingException("Input String has an invalid JSON format.");
+        }
+    }
+
+    public static <T> T parseJson(String input, Class<T> targetClass) {
+        if (StringUtils.isBlank(input)) {
+            return null;
+        }
+        try {
+            return jsonMapper.readValue(input, targetClass);
         } catch (JsonProcessingException e) {
             throw new JsonParsingException("Input String has an invalid JSON format.");
         }

@@ -1,10 +1,6 @@
 package org.example.cinemabookingsystem.concurrency.api;
 
 import org.example.cinemabookingsystem.concurrency.model.enums.LockedTable;
-import org.springframework.jdbc.core.RowMapper;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Scoped handle exposed to business code while a transaction is active.
@@ -15,6 +11,11 @@ import java.util.Optional;
  *
  * <p>The context is bound to a single thread (the one running inside {@link TransactionManager#execute}).
  * It must not be passed to other threads.
+ *
+ * <p><b>SQL parameter convention:</b> the SQL bind parameters are always passed as trailing
+ * {@code Object... params} varargs, mirroring Spring's {@code JdbcClient.params(Object...)}.
+ * For {@link #update} and {@link #delete} the undo action is bundled into a {@link Compensation}
+ * value placed before {@code params}, so the main parameters stay in final (varargs) position.
  */
 public interface TransactionContext {
 
@@ -31,36 +32,29 @@ public interface TransactionContext {
     long insert(LockedTable table, String sql, Object... params);
 
     /**
-     * UPDATEs rows and logs a caller-supplied compensation SQL. Caller is responsible
+     * UPDATEs rows and logs the supplied {@link Compensation}. Caller is responsible
      * for snapshotting old values needed to undo the change.
      */
     int update(LockedTable table,
                long resourceId,
                String sql,
-               Object[] params,
-               String compensationSql,
-               Object[] compensationParams);
+               Compensation compensation,
+               Object... params);
 
     /**
-     * DELETEs rows and logs a caller-supplied compensation SQL (typically an INSERT
+     * DELETEs rows and logs the supplied {@link Compensation} (typically an INSERT
      * with the row's prior values).
      */
     int delete(LockedTable table,
                long resourceId,
                String sql,
-               Object[] params,
-               String compensationSql,
-               Object[] compensationParams);
+               Compensation compensation,
+               Object... params);
 
-    <T> Optional<T> queryOptional(LockedTable table,
-                                  long resourceId,
-                                  String sql,
-                                  RowMapper<T> rowMapper,
-                                  Object... params);
-
-    <T> List<T> queryList(LockedTable table,
-                          long resourceId,
-                          String sql,
-                          RowMapper<T> rowMapper,
-                          Object... params);
+    /**
+     * Runs an existence check under the transaction (logged as a SELECT operation). The supplied
+     * {@code sql} must return a single boolean column — e.g.
+     * {@code SELECT EXISTS(SELECT 1 FROM <table> WHERE ...)}.
+     */
+    boolean exists(LockedTable table, long resourceId, String sql, Object... params);
 }

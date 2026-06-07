@@ -375,6 +375,17 @@ Active profile defaults to `local` (`SPRING_PROFILES_ACTIVE`).
 
 ### Environment Variables (default profile)
 
+The default (prod-like) profile reads everything from the environment — there are no in-code defaults for secrets. **These are not needed for local development**, where the `local` profile hardcodes its datasource and JWT secret.
+
+A template lives in [`.env.example`](.env.example). Copy it, fill in real values, and export it before running the default profile:
+
+```bash
+cp .env.example .env          # then edit .env
+export $(grep -v '^#' .env | xargs) && ./gradlew bootRun
+```
+
+The real `.env` is gitignored — never commit secrets.
+
 | Variable                 | Description |
 |--------------------------|-------------|
 | `DB_URL`                 | JDBC URL for PostgreSQL |
