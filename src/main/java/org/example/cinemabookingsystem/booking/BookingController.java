@@ -4,13 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.cinemabookingsystem.booking.dto.BookingResponse;
 import org.example.cinemabookingsystem.booking.dto.CreateBookingRequest;
-import org.example.cinemabookingsystem.user.CinemaUser;
-import org.example.cinemabookingsystem.user.CinemaUserRepository;
+import org.example.cinemabookingsystem.user.CinemaUserPrincipal;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,36 +24,26 @@ import java.util.List;
 public class BookingController {
 
     private final BookingService bookingService;
-    private final CinemaUserRepository cinemaUserRepository;
 
     @PostMapping
-    public ResponseEntity<BookingResponse> create(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<BookingResponse> create(@AuthenticationPrincipal CinemaUserPrincipal principal,
                                                   @Valid @RequestBody CreateBookingRequest request) {
-        Long userId = resolveUserId(principal);
-        Booking booking = bookingService.createBooking(userId, request.showingId(), request.seatIds());
+        Booking booking = bookingService.createBooking(principal.id(), request.showingId(), request.seatIds());
         List<BookedSeat> seats = bookingService.findSeatsForBooking(booking.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(BookingResponse.from(booking, seats));
     }
 
     @GetMapping("/me")
-    public List<BookingResponse> myBookings(@AuthenticationPrincipal UserDetails principal) {
-        Long userId = resolveUserId(principal);
-        return bookingService.findBookingsForUser(userId).stream()
+    public List<BookingResponse> myBookings(@AuthenticationPrincipal CinemaUserPrincipal principal) {
+        return bookingService.findBookingsForUser(principal.id()).stream()
                 .map(booking -> BookingResponse.from(booking, bookingService.findSeatsForBooking(booking.id())))
                 .toList();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> cancel(@AuthenticationPrincipal UserDetails principal,
+    public ResponseEntity<Void> cancel(@AuthenticationPrincipal CinemaUserPrincipal principal,
                                        @PathVariable Long id) {
-        Long userId = resolveUserId(principal);
-        bookingService.cancelBooking(userId, id);
+        bookingService.cancelBooking(principal.id(), id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Long resolveUserId(UserDetails principal) {
-        return cinemaUserRepository.findByUserName(principal.getUsername())
-                .map(CinemaUser::id)
-                .orElseThrow(() -> new UsernameNotFoundException(principal.getUsername()));
     }
 }

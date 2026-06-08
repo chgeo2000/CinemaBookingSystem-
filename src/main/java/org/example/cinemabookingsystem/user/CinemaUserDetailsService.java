@@ -1,8 +1,6 @@
 package org.example.cinemabookingsystem.user;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,11 +19,7 @@ public class CinemaUserDetailsService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + userName));
     }
 
-    private UserDetails toUserDetails(CinemaUser user) {
-        return User.builder()
-                .username(user.userName())
-                .password(user.password())
-                .authorities(new SimpleGrantedAuthority("ROLE_" + user.role().name()))
-                .build();
+    private CinemaUserPrincipal toUserDetails(CinemaUser user) {
+        return new CinemaUserPrincipal(user.id(), user.userName(), user.password(), user.role());
     }
 }

@@ -20,10 +20,6 @@ public class CinemaUserRepository {
              WHERE user_name = :userName
             """;
 
-    private static final String EXISTS_BY_USER_NAME_SQL = """
-            SELECT COUNT(*) FROM cinema_user WHERE user_name = :userName
-            """;
-
     private static final String INSERT_SQL = """
             INSERT INTO cinema_user (user_name, password, role, email, phone_number)
             VALUES (:userName, :password, :role, :email, :phoneNumber)
@@ -38,15 +34,7 @@ public class CinemaUserRepository {
                 .optional();
     }
 
-    public boolean existsByUserName(String userName) {
-        Integer count = jdbcClient.sql(EXISTS_BY_USER_NAME_SQL)
-                .param("userName", userName)
-                .query(Integer.class)
-                .single();
-        return count != null && count > 0;
-    }
-
-    public CinemaUser save(CinemaUser user) {
+    public Long save(CinemaUser user) {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcClient.sql(INSERT_SQL)
                 .param("userName", user.userName())
@@ -55,16 +43,7 @@ public class CinemaUserRepository {
                 .param("email", user.email())
                 .param("phoneNumber", user.phoneNumber())
                 .update(keyHolder);
-
-        Long generatedId = extractGeneratedId(keyHolder);
-        return new CinemaUser(
-                generatedId,
-                user.userName(),
-                user.password(),
-                user.role(),
-                user.email(),
-                user.phoneNumber()
-        );
+        return extractGeneratedId(keyHolder);
     }
 
     private Long extractGeneratedId(KeyHolder keyHolder) {
